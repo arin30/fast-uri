@@ -22,3 +22,22 @@ test('WebSocket queries preserve additional question marks', (t) => {
 
   t.end()
 })
+
+test('WebSocket URLs distinguish empty queries from absent queries', (t) => {
+  for (const scheme of ['ws', 'wss']) {
+    for (const path of ['/', '/chat']) {
+      const uri = `${scheme}://example.com${path}?`
+      const withoutQuery = `${scheme}://example.com${path}`
+      const normalized = `${scheme}://example.com${path === '/' ? '' : path}?`
+      const parsed = fastURI.parse(uri)
+
+      t.equal(parsed.resourceName, `${path}?`, `${scheme} preserves an empty query on ${path}`)
+      t.equal(fastURI.serialize(parsed), normalized, `${scheme} empty query round-trips on ${path}`)
+      t.equal(fastURI.normalize(uri), normalized, `${scheme} normalization preserves an empty query on ${path}`)
+      t.equal(fastURI.equal(uri, withoutQuery), false, `${scheme} distinguishes an absent query on ${path}`)
+      t.equal(fastURI.parse(withoutQuery).resourceName, path, `${scheme} does not add a query on ${path}`)
+    }
+  }
+
+  t.end()
+})
